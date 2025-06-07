@@ -1,4 +1,5 @@
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
@@ -6,18 +7,24 @@ import java.util.Scanner;
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     public static Scanner input = new Scanner(System.in);
-    public static int row;
-    public static int seat;
     public static String style = "-+".repeat(30);
     public static String history = "";
+    private static String[][] hallA;
+    private static String[][] hallB;
+    private static String[][] hallC;
 
     public static void main(String[] args) {
 
-        row = checkInputNumber("> Config total rows in hall: ");
-        seat = checkInputNumber("> Config total seats in hall: ");
+        displayHeading();
+        int row = checkInputNumber("> Config total rows in hall: ");
+        int seat = checkInputNumber("> Config total seats in hall: ");
         history += LocalDate.now() + "";
 
-        String[][] hall = new String[row][seat];
+        hallA = new String[row][seat];
+        hallB = new String[row][seat];
+        hallC = new String[row][seat];
+        setDefault();
+        System.out.println();
 
         char op;
         do {
@@ -27,21 +34,37 @@ public class Main {
             System.out.println("<C> Showtime");
             System.out.println("<D> Reboot Showtime");
             System.out.println("<E> History");
-            System.out.println("<F> Exit");System.out.print("Please, Choose one option: ");
+            System.out.println("<F> Exit");
+            System.out.print("Please, Choose one option: ");
             op = input.next().toLowerCase().charAt(0);
             switch (op) {
                 case 'a' -> {
-                    booking(hall);
+                    booking(hallA);
                 }
                 case 'b' -> {
-                    halls(hall);
+                    display();
                 }
                 case 'c' -> {
                     showtime();
                 }
+                case 'd' -> {
+                    reboot(hallA);
+                }
             }
         }while (op != 'f');
 
+    }
+
+    public static void displayHeading(){
+        System.out.println("""
+                 ██████ ███████ ████████  █████  ██████      ██   ██  █████  ██      ██     \s
+                ██      ██         ██    ██   ██ ██   ██     ██   ██ ██   ██ ██      ██     \s
+                ██      ███████    ██    ███████ ██   ██     ███████ ███████ ██      ██     \s
+                ██           ██    ██    ██   ██ ██   ██     ██   ██ ██   ██ ██      ██     \s
+                 ██████ ███████    ██    ██   ██ ██████      ██   ██ ██   ██ ███████ ███████\s
+                                                                                            \s
+                                                                                            \s
+                """);
     }
 
     public static int checkInputNumber (String message) {
@@ -59,83 +82,66 @@ public class Main {
         bookingHeader();
         System.out.print("> Please select showtime (A | B | C): ");
         char choice = input.next().toUpperCase().charAt(0);
-        selectedShowtime(choice, hall);
+        selectedShowtime(choice);
         instruction(choice);
 
-        /*System.out.print("> PLease select available seat: ");
-        String seatChoice = input.nextLine();
-        input.nextLine();
+        if (choice == 'A') {
+            System.out.print("> PLease select available seat: ");
+            String selectedSeat = input.nextLine();
+            input.nextLine();
+            String[] seats = selectedSeat.split(",");
 
-        System.out.print("> Please enter student id: ");
-        int id = input.nextInt();
-
-        System.out.print("Are you sure to book? (Y/n): ");
-        char decision = input.next().toUpperCase().charAt(0);
-        if (decision == 'Y') {
-            System.out.println(style);
-            System.out.println("# [" + seatChoice + "] booked successfully!");
-            System.out.println(style);
-        } else {
-
-        }*/
-        System.out.print("> Please select available seat(s): ");
-        input.nextLine(); // Consume leftover newline
-        String seatChoice = input.nextLine(); // e.g. "A-1,A-2"
-        String[] selectedSeats = seatChoice.split(",");
-
-        System.out.print("> Please enter student id: ");
-        int id = input.nextInt();
-
-        System.out.print("Are you sure to book? (Y/n): ");
-        char decision = input.next().toUpperCase().charAt(0);
-
-        if (decision == 'Y') {
-            boolean allAvailable = true;
-
-            // Check seat availability
-            for (String seat : selectedSeats) {
-                seat = seat.trim();
-                int rowIndex = seat.charAt(0) - 'A';
-                int seatIndex = Integer.parseInt(seat.split("-")[1]) - 1;
-
-                if (hall[rowIndex][seatIndex] != null) {
-                    System.out.println("# Seat " + seat + " is already booked!");
-                    allAvailable = false;
+            for (String s : seats) {
+                for (int i = 0; i < hallA.length; i++) {
+                    for (int j = 0; j < hallA[i].length; j++) {
+                        if (hallA[i][j].contains(s)) {
+                            hallA[i][j] = "|" + (char) ('A' + i) + "-" + (j + 1) + ":: BO|  ";
+                            break;
+                        }
+                    }
                 }
-            }
-
-            if (allAvailable) {
-                // Book the seats
-                for (String seat : selectedSeats) {
-                    seat = seat.trim();
-                    int rowIndex = seat.charAt(0) - 'A';
-                    int seatIndex = Integer.parseInt(seat.split("-")[1]) - 1;
-                    hall[rowIndex][seatIndex] = "BK"; // Mark as booked
-                }
-
-                System.out.println(style);
-                System.out.println("# Seats " + String.join(", ", selectedSeats) + " booked successfully!");
-                System.out.println(style);
-            } else {
-                System.out.println("# Booking failed due to already booked seats.");
             }
         }
-
-
     }
-    public static void selectedShowtime (char choice, String[][] hallShow) {
+    public static void setDefault() {
+        for (int i = 0; i < hallA.length; i++) {
+            for (int j = 0; j < hallA[i].length; j++) {
+                hallA[i][j] = "|" + (char) ('A' + i) + "-" + (j + 1) + ":: AV|  ";
+                hallB[i][j] = "|" + (char) ('A' + i) + "-" + (j + 1) + ":: AV|  ";
+                hallC[i][j] = "|" + (char) ('A' + i) + "-" + (j + 1) + ":: AV|  ";
+            }
+            System.out.println();
+        }
+    }
+
+    public static void selectedShowtime (char choice) {
         switch (choice) {
             case 'A' -> {
                 System.out.println("# Hall A");
-                rawHall(hallShow);
+                for (int i = 0; i < hallA.length; i++) {
+                    for (int j = 0; j < hallA[i].length; j++) {
+                        System.out.print(hallA[i][j] = "|" + (char) ('A' + i) + "-" + (j + 1) + ":: AV|  ");
+                    }
+                    System.out.println();
+                }
             }
             case 'B' -> {
                 System.out.println("# Hall B");
-                rawHall(hallShow);
+                for (int i = 0; i < hallB.length; i++) {
+                    for (int j = 0; j < hallB[i].length; j++) {
+                        System.out.print(hallB[i][j] = "|" + (char) ('A' + i) + "-" + (j + 1) + ":: AV|  ");
+                    }
+                    System.out.println();
+                }
             }
             case 'C' -> {
                 System.out.println("# Hall C");
-                rawHall(hallShow);
+                for (int i = 0; i < hallC.length; i++) {
+                    for (int j = 0; j < hallC[i].length; j++) {
+                        System.out.print(hallC[i][j] = "|" + (char) ('A' + i) + "-" + (j + 1) + ":: AV|  ");
+                    }
+                    System.out.println();
+                }
             }
         }
     }
@@ -154,24 +160,34 @@ public class Main {
 
         }
     }
-    public static void halls (String[][] hall) {
-        for (int k = 0; k < 3; k++) {
-            char hallType = (char) ('A' + k);
-            System.out.println("\n# Hall " + hallType);
-            rawHall(hall);
-        }
+    public static void display () {
+        System.out.println("\n# Hall A");
+        hallShow(hallA);
+        System.out.println("\n# Hall B");
+        hallShow(hallB);
+        System.out.println("\n# Hall C");
+        hallShow(hallC);
 
     }
-    public static void rawHall (String[][] hall) {
-        for (int i = 0; i < hall.length; i++) {
-            char row = (char) ('A' + i);
-            for (int j = 0; j < hall.length; j++) {
-                System.out.print("|" + row + "-" + (j + 1) + ":: AV|  ");
+
+    public static void hallShow(String[][] hall){
+        for (String[] row : hall) {
+            for (String seat : row) {
+                System.out.print(seat);
             }
             System.out.println();
         }
     }
+    /*public static void hall (String[][] hall) {
+        for (int i = 0; i < hall.length; i++) {
+            for (int j = 0; j < hall[i].length; j++) {
+                System.out.print(hall[i][j]);
+            }
+            System.out.println();
+        }
+    }*/
     public static void bookingHeader () {
+        System.out.println();
         System.out.println(style);
         System.out.println("> Start booking process");
         System.out.println(style);
@@ -192,11 +208,11 @@ public class Main {
     public static void reboot (String[][] hall) {
         for (int i = 0; i < hall.length; i++) {
             for (int j = 0; j < hall.length; j++) {
-                hall[row][seat] = null;
+                hall[i][j] = null;
             }
         }
     }
     public static void history (int[][] his) {
-        
+
     }
 }
