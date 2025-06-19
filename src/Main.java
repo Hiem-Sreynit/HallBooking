@@ -1,5 +1,4 @@
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
@@ -8,17 +7,18 @@ import java.util.Scanner;
 public class Main {
     public static Scanner input = new Scanner(System.in);
     public static String style = "-+".repeat(30);
-    public static String history = "";
+    static String[] bookingHistory = new String[100]; // simple array-based history
+    static int historyCount = 0;
     private static String[][] hallA;
     private static String[][] hallB;
     private static String[][] hallC;
+    static char choice;
 
     public static void main(String[] args) {
 
         displayHeading();
         int row = checkInputNumber("> Config total rows in hall: ");
         int seat = checkInputNumber("> Config total seats in hall: ");
-        history += LocalDate.now() + "";
 
         hallA = new String[row][seat];
         hallB = new String[row][seat];
@@ -38,7 +38,7 @@ public class Main {
             op = input.next().toLowerCase().charAt(0);
             switch (op) {
                 case 'a' -> {
-                    booking(hallA);
+                    booking();
                 }
                 case 'b' -> {
                     display();
@@ -48,6 +48,9 @@ public class Main {
                 }
                 case 'd' -> {
                     reboot();
+                }
+                case 'e' -> {
+                    history();
                 }
             }
         }while (op != 'f');
@@ -77,39 +80,80 @@ public class Main {
             }
         }while (true);
     }
-    private static void booking(String[][] hall) {
+    private static void booking() {
         bookingHeader();
         System.out.print("> Please select showtime (A | B | C): ");
-        char choice = input.next().toUpperCase().charAt(0);
-        selectedShowtime(choice);
-        instruction(choice);
-
-        System.out.print("> PLease select available seat: ");
-        String selectedSeat = input.nextLine();
-        input.nextLine();
-        String[] seats = selectedSeat.split(",");
-
-        for (String s : seats) {
-            for (int i = 0; i < hallA.length; i++) {
-                for (int j = 0; j < hallA[i].length; j++) {
-                    if (hallA[i][j].contains(s)) {
-                        hallA[i][j] = "|" + (char) ('A' + i) + "-" + (j + 1) + ":: BO|  ";
-                        break;
-                    }
-                }
+        choice = input.next().toUpperCase().charAt(0);
+        String[][] selectedHall = null;
+        String hallname = "";
+        switch (choice) {
+            case 'A' -> {
+                selectedHall = hallA;
+                hallname = "A";
+            }
+            case 'B' -> {
+                selectedHall = hallB;
+                hallname = "B";
+            }
+            case 'C' -> {
+                selectedHall = hallC;
+                hallname = "C";
             }
         }
+        selectedShowtime();
+        instruction();
 
+        System.out.print("");
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("> PLease select available seat: ");
+        String userInput = scanner.nextLine();
+        String[] seatsToBook = userInput.split(",");
+
+        for (String s : seatsToBook) {
+            String cleanSeat = s.trim();
+            if (!cleanSeat.matches("[A-Za-z]-[0-9]+")) {
+                System.out.println("Invalid seat format: " + cleanSeat + ". Please use A-1, B-2 format.");
+                continue;
+            }
+
+            char rowChar = Character.toUpperCase(cleanSeat.charAt(0));
+            int colNum = Integer.parseInt(cleanSeat.substring(cleanSeat.indexOf('-') + 1));
+
+            int rowIndex = rowChar - 'A';
+            int colIndex = colNum - 1;
+
+            if (rowIndex >= 0 && rowIndex < selectedHall.length && colIndex >= 0 && colIndex < selectedHall[rowIndex].length) {
+                if (selectedHall[rowIndex][colIndex].contains(":: AV")) {
+                    selectedHall[rowIndex][colIndex] = "|" + rowChar + "-" + colNum + ":: BO|  ";
+                } else {
+                    System.out.println("Seat " + cleanSeat + " is already booked or not available.");
+                }
+            } else {
+                System.out.println("Seat " + cleanSeat + " is out of bounds for this hall.");
+            }
+        }
         System.out.print("Enter customer Id: ");
         int id = input.nextInt();
         System.out.print("Are you sure want to book the seat(s) ?(Y/n): ");
         char ans = input.next().toUpperCase().charAt(0);
 
         System.out.println(style);
-        for (int i = 0; i < seats.length; i++) {
-            System.out.println("# [" + selectedSeat + "] booked successfully!");
+        for (int i = 0; i < seatsToBook.length; i++) {
+            System.out.println("# [" + userInput + "] booked successfully!");
+            break;
         }
         System.out.println(style);
+        if (ans == 'Y') {
+            StringBuilder bookedSeats = new StringBuilder();
+            for (String s : seatsToBook) {
+                bookedSeats.append(s.trim()).append(" ");
+            }
+            String record = LocalDate.now() + " | Showtime: " + choice + " | Customer ID: " + id + " | Seats: " + bookedSeats;
+            if (historyCount < bookingHistory.length) {
+                bookingHistory[historyCount++] = record;
+            }
+        }
+
     }
     public static void setDefault() {
         for (int i = 0; i < hallA.length; i++) {
@@ -122,7 +166,7 @@ public class Main {
         }
     }
 
-    public static void selectedShowtime (char choice) {
+    public static void selectedShowtime () {
         switch (choice) {
             case 'A' -> {
                 System.out.println("# Hall A");
@@ -153,7 +197,7 @@ public class Main {
             }
         }
     }
-    public static void instruction (char choice) {
+    public static void instruction () {
         System.out.println(style);
         System.out.println("# Instruction");
         if (choice == 'A'){
@@ -165,7 +209,6 @@ public class Main {
         }else if (choice == 'C') {
             System.out.println("# Single: C-1");
             System.out.println("# Multiple (Separate by comma): C-1,C-2");
-
         }
     }
     public static void display () {
@@ -213,7 +256,19 @@ public class Main {
         System.out.println("Rebooting successfully!");
         System.out.println(style);
     }
-    public static void history (int[][] his) {
-
+    public static void history() {
+        System.out.println(style);
+        System.out.println("# Booking History");
+        if (historyCount == 0) {
+            System.out.println("No bookings yet.");
+        } else {
+            for (int i = 0; i < historyCount; i++) {
+                System.out.println((i + 1) + ". " + bookingHistory[i]);
+            }
+        }
+        System.out.println(style);
     }
+
+
+
 }
