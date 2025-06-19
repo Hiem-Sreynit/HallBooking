@@ -24,11 +24,10 @@ public class Main {
         hallB = new String[row][seat];
         hallC = new String[row][seat];
         setDefault();
-        System.out.println();
+
 
         char op;
         do {
-            System.out.println();
             System.out.println("<A> Booking");
             System.out.println("<B> Hall");
             System.out.println("<C> Showtime");
@@ -48,7 +47,7 @@ public class Main {
                     showtime();
                 }
                 case 'd' -> {
-                    reboot(hallA);
+                    reboot();
                 }
             }
         }while (op != 'f');
@@ -56,7 +55,7 @@ public class Main {
     }
 
     public static void displayHeading(){
-        System.out.println("""
+        System.out.print("""
                  ██████ ███████ ████████  █████  ██████      ██   ██  █████  ██      ██     \s
                 ██      ██         ██    ██   ██ ██   ██     ██   ██ ██   ██ ██      ██     \s
                 ██      ███████    ██    ███████ ██   ██     ███████ ███████ ██      ██     \s
@@ -85,23 +84,32 @@ public class Main {
         selectedShowtime(choice);
         instruction(choice);
 
-        if (choice == 'A') {
-            System.out.print("> PLease select available seat: ");
-            String selectedSeat = input.nextLine();
-            input.nextLine();
-            String[] seats = selectedSeat.split(",");
+        System.out.print("> PLease select available seat: ");
+        String selectedSeat = input.nextLine();
+        input.nextLine();
+        String[] seats = selectedSeat.split(",");
 
-            for (String s : seats) {
-                for (int i = 0; i < hallA.length; i++) {
-                    for (int j = 0; j < hallA[i].length; j++) {
-                        if (hallA[i][j].contains(s)) {
-                            hallA[i][j] = "|" + (char) ('A' + i) + "-" + (j + 1) + ":: BO|  ";
-                            break;
-                        }
+        for (String s : seats) {
+            for (int i = 0; i < hallA.length; i++) {
+                for (int j = 0; j < hallA[i].length; j++) {
+                    if (hallA[i][j].contains(s)) {
+                        hallA[i][j] = "|" + (char) ('A' + i) + "-" + (j + 1) + ":: BO|  ";
+                        break;
                     }
                 }
             }
         }
+
+        System.out.print("Enter customer Id: ");
+        int id = input.nextInt();
+        System.out.print("Are you sure want to book the seat(s) ?(Y/n): ");
+        char ans = input.next().toUpperCase().charAt(0);
+
+        System.out.println(style);
+        for (int i = 0; i < seats.length; i++) {
+            System.out.println("# [" + selectedSeat + "] booked successfully!");
+        }
+        System.out.println(style);
     }
     public static void setDefault() {
         for (int i = 0; i < hallA.length; i++) {
@@ -161,12 +169,14 @@ public class Main {
         }
     }
     public static void display () {
+        System.out.print(style);
         System.out.println("\n# Hall A");
         hallShow(hallA);
         System.out.println("\n# Hall B");
         hallShow(hallB);
         System.out.println("\n# Hall C");
         hallShow(hallC);
+        System.out.println(style);
 
     }
 
@@ -178,14 +188,6 @@ public class Main {
             System.out.println();
         }
     }
-    /*public static void hall (String[][] hall) {
-        for (int i = 0; i < hall.length; i++) {
-            for (int j = 0; j < hall[i].length; j++) {
-                System.out.print(hall[i][j]);
-            }
-            System.out.println();
-        }
-    }*/
     public static void bookingHeader () {
         System.out.println();
         System.out.println(style);
@@ -205,12 +207,11 @@ public class Main {
         System.out.println("# C) Night (07:00PM - 09:30PM)");
         System.out.println(style);
     }
-    public static void reboot (String[][] hall) {
-        for (int i = 0; i < hall.length; i++) {
-            for (int j = 0; j < hall.length; j++) {
-                hall[i][j] = null;
-            }
-        }
+    public static void reboot () {
+        setDefault();
+        System.out.println(style);
+        System.out.println("Rebooting successfully!");
+        System.out.println(style);
     }
     public static void history (int[][] his) {
 
